@@ -5,3 +5,11 @@ authors = ["quininer kel <quininer@live.com>"]
 
 [dependencies]
 rand = "0.3"
+
+[features]
+default = [ "i" ]
+i = []
+ii = []
+iii = []
+iv = []
+v = []

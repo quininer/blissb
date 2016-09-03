@@ -1,80 +1,56 @@
-pub struct Param {
-    pub q: u16,
-    pub n: u16,
-    pub d: u16,
-    pub p: u16,
-    pub kappa: u16,
-    pub b_inf: u16,
-    pub b_l2: u16,
-    pub nz1: u16,
-    pub nz2: u16,
-    pub pmax: u32,
-    pub sigma: f64,
-    pub m: f64,
-    pub w: &'static [u16],
-    pub r: &'static [u16]
-}
-
 macro_rules! bliss_param {
     (
-        $name:ident :
-        $q:expr, $n:expr, $d:expr, $p:expr,
-        $kappa:expr, $b_inf:expr, $b_l2:expr,
-        $nz1:expr, $nz2:expr, $pmax:expr,
-        $sigma:expr, $m:expr,
-        $w:expr, $r:expr
+        $q:expr, $n:expr, $d:expr, $p:expr, $kappa:expr, $b_inf:expr, $b_l2:expr,
+        $nz1:expr, $nz2:expr, $pmax:expr, $sigma:expr, $m:expr
     ) => {
-        pub const $name: Param = Param {
-            q: $q,
-            n: $n,
-            d: $d,
-            p: $p,
-            kappa: $kappa,
-            b_inf: $b_inf,
-            b_l2: $b_l2,
-            nz1: $nz1,
-            nz2: $nz2,
-            pmax: $pmax,
-            sigma: $sigma,
-            m: $m,
-            w: $w,
-            r: $r
-        };
+        pub const Q: i32 = $q;
+        pub const N: usize = $n;
+        pub const D: i32 = $d;
+        pub const P: i32 = $p;
+        pub const KAPPA: i32 = $kappa;
+        pub const B_INF: i32 = $b_inf;
+        pub const B_L2: i32 = $b_l2;
+        pub const NZ1: i32 = $nz1;
+        pub const NZ2: i32 = $nz2;
+        pub const PMAX: i32 = $pmax;
+        pub const SIGMA: f64 = $sigma;
+        pub const M: f64 = $m;
     }
 }
 
+#[cfg(feature = "i")]
 bliss_param!(
-    BLISS_PARAM_0:
     7681,   256,    5,      480,    12,     542,    2428 * 2428,
-    140,    38,     17928,  100.0,  2.44,   &W7681_N256,  &R7681_N256
+    140,    38,     17928,  100.0,  2.44
 );
 
+#[cfg(feature = "ii")]
 bliss_param!(
-    BLISS_PARAM_1:
     12289,  512,    10,     24,     23,     2100,   12872 * 12872,
-    154,    0,      17825,  215.0,  1.21,   &W12289_N512, &R12289_N512
+    154,    0,      17825,  215.0,  1.21
 );
 
+#[cfg(feature = "iii")]
 bliss_param!(
-    BLISS_PARAM_2:
     12289,  512,    10,     24,     23,     1563,   11073 * 11073,
-    154,    0,      17825,  107.0,  2.18,   &W12289_N512, &R12289_N512
+    154,    0,      17825,  107.0,  2.18
 );
 
+#[cfg(feature = "iv")]
 bliss_param!(
-    BLISS_PARAM_3:
     12289,  512,    9,      48,     30,     1760,   10206 * 10206,
-    216,    16,     42270,  250.0,  1.40,   &W12289_N512, &R12289_N512
+    216,    16,     42270,  250.0,  1.40
 );
 
+#[cfg(feature = "v")]
 bliss_param!(
-    BLISS_PARAM_4:
     12289,  512,    8,      96,     39,     1613,   9901 * 9901,
-    231,    31,     69576,  271.0,  1.61,   &W12289_N512, &R12289_N512
+    231,    31,     69576,  271.0,  1.61
 );
 
 
-const W7681_N256: [u16; 256] = [
+#[cfg(feature = "i")]
+pub const W: [i32; 256] = [
         1,  7146,  2028,  5722,  3449,  5906,  4862,  2689,
      5413,  7463,  1415,  3394,  4607,   856,  2900,    62,
      5235,  2840,  1438,  6451,  5165,  1885,  5417,  5323,
@@ -109,7 +85,8 @@ const W7681_N256: [u16; 256] = [
      5036,  1771,  4959,  4561,  2423,  1784,  5685,   201
 ];
 
-const R7681_N256: [u16; 256] = [
+#[cfg(feature = "i")]
+pub const R: [i32; 256] = [
        30,  6993,  7073,  2678,  3617,   517,  7602,  3860,
      1089,  1141,  4045,  1967,  7633,  2637,  2509,  1860,
      3430,   709,  4735,  1505,  1330,  2783,  1209,  6070,
@@ -146,7 +123,13 @@ const R7681_N256: [u16; 256] = [
 
 // Roots of unity. q = 12289  n = 512
 
-const W12289_N512: [u16; 512] = [
+#[cfg(any(
+    feature = "ii",
+    feature = "iii",
+    feature = "iv",
+    feature = "v"
+))]
+pub const W: [i32; 512] = [
         1, 10302,  3400,  3150,  8340,  6281,  5277,  9407,
     12149,  7822,  3271,  1404, 12144,  5468, 10849, 10232,
      7311, 10930,  9042,    64,  8011,  8687,  4976,  5333,
@@ -213,7 +196,13 @@ const W12289_N512: [u16; 512] = [
     11499,  9027,  5291,  6167, 10593,  2766,  9430,  3315
 ];
 
-const R12289_N512: [u16; 512] = [
+#[cfg(any(
+    feature = "ii",
+    feature = "iii",
+    feature = "iv",
+    feature = "v"
+))]
+pub const R: [i32; 512] = [
        24,  1468,  7866,  1866,  3536,  3276,  3758,  4566,
      8929,  3393,  4770,  9118,  8809,  8342,  2307, 12077,
      3418,  4251,  8095,  1536,  7929, 11864,  8823,  5102,

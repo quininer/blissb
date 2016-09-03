@@ -1,3 +1,5 @@
+use ::param::{ N };
+
 #[inline] fn muln(x: i32, y: i32, n: i32) -> i32 {
     ((x as i64 * y as i64) % n as i64) as i32
 }
@@ -24,11 +26,11 @@ pub fn pwr(mut x: i32, mut e: i32, n: i32) -> i32 {
     y
 }
 
-pub fn fft(v: &mut [i32], n: usize, q: i32, w: &[i32]) {
-    let mut j = n >> 1;
-    for i in 1..(n - 1) {
+pub fn fft(v: &mut [i32], q: i32, w: &[i32]) {
+    let mut j = N >> 1;
+    for i in 1..(N - 1) {
         if i < j { v.swap(i, j) };
-        let mut k = n;
+        let mut k = N;
         loop {
             k >>= 1;
             j ^= k;
@@ -37,10 +39,10 @@ pub fn fft(v: &mut [i32], n: usize, q: i32, w: &[i32]) {
     }
 
     let mut i = 1;
-    while i < n {
-        let l = n / i;
+    while i < N {
+        let l = N / i;
 
-        for k in (0..n).step_by(i + i) {
+        for k in (0..N).step_by(i + i) {
             let x = v[k + i];
             v[k + i] = v[k] - x;
             v[k] = v[k] + x;
@@ -48,7 +50,7 @@ pub fn fft(v: &mut [i32], n: usize, q: i32, w: &[i32]) {
 
         for j in 1..i {
             let y = w[j * l];
-            for k in (j..n).step_by(i + i) {
+            for k in (j..N).step_by(i + i) {
                 let x = muln(v[k + i], y, q);
                 v[k + i] = v[k] - x;
                 v[k] += x;
@@ -59,21 +61,21 @@ pub fn fft(v: &mut [i32], n: usize, q: i32, w: &[i32]) {
     }
 }
 
-pub fn xmu(v: &mut [i32], n: usize, q: i32, t: &[i32], u: &[i32]) {
-    for i in 0..n {
+pub fn xmu(v: &mut [i32], q: i32, t: &[i32], u: &[i32]) {
+    for i in 0..N {
         v[i] = muln(t[i], u[i], q);
     }
 }
 
-pub fn cmu(v: &mut [i32], n: usize, q: i32, t: &[i32], c: i32) {
-    for i in 0..n {
+pub fn cmu(v: &mut [i32], q: i32, t: &[i32], c: i32) {
+    for i in 0..N {
         let x = muln(t[i], c, q);
         v[i] = if x < 0 { x + q } else { x };
     }
 }
 
-pub fn flp(v: &mut [i32], n: usize, q: i32) {
-    let (mut i, mut j) = (1, n - 1);
+pub fn flp(v: &mut [i32], q: i32) {
+    let (mut i, mut j) = (1, N - 1);
     while i < j {
         v.swap(i, j);
         i += 1;
@@ -81,7 +83,7 @@ pub fn flp(v: &mut [i32], n: usize, q: i32) {
     }
     v[0] = -v[0];
 
-    for i in 0..n {
+    for i in 0..N {
         let mut x = v[i];
         if x < 0 { x += q };
         if x >= q { x -= q };
