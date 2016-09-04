@@ -7,7 +7,7 @@ macro_rules! bliss_param {
         pub const N: usize = $n;
         pub const D: i32 = $d;
         pub const P: i32 = $p;
-        pub const KAPPA: i32 = $kappa;
+        pub const KAPPA: usize = $kappa;
         pub const B_INF: i32 = $b_inf;
         pub const B_L2: i32 = $b_l2;
         pub const NZ1: i32 = $nz1;
@@ -18,38 +18,38 @@ macro_rules! bliss_param {
     }
 }
 
-#[cfg(feature = "i")]
+#[cfg(feature = "o")]
 bliss_param!(
     7681,   256,    5,      480,    12,     542,    2428 * 2428,
     140,    38,     17928,  100.0,  2.44
 );
 
-#[cfg(feature = "ii")]
+#[cfg(feature = "i")]
 bliss_param!(
     12289,  512,    10,     24,     23,     2100,   12872 * 12872,
     154,    0,      17825,  215.0,  1.21
 );
 
-#[cfg(feature = "iii")]
+#[cfg(feature = "ii")]
 bliss_param!(
     12289,  512,    10,     24,     23,     1563,   11073 * 11073,
     154,    0,      17825,  107.0,  2.18
 );
 
-#[cfg(feature = "iv")]
+#[cfg(feature = "iiiv")]
 bliss_param!(
     12289,  512,    9,      48,     30,     1760,   10206 * 10206,
     216,    16,     42270,  250.0,  1.40
 );
 
-#[cfg(feature = "v")]
+#[cfg(feature = "iv")]
 bliss_param!(
     12289,  512,    8,      96,     39,     1613,   9901 * 9901,
     231,    31,     69576,  271.0,  1.61
 );
 
 
-#[cfg(feature = "i")]
+#[cfg(feature = "o")]
 pub const W: [i32; 256] = [
         1,  7146,  2028,  5722,  3449,  5906,  4862,  2689,
      5413,  7463,  1415,  3394,  4607,   856,  2900,    62,
@@ -85,7 +85,7 @@ pub const W: [i32; 256] = [
      5036,  1771,  4959,  4561,  2423,  1784,  5685,   201
 ];
 
-#[cfg(feature = "i")]
+#[cfg(feature = "o")]
 pub const R: [i32; 256] = [
        30,  6993,  7073,  2678,  3617,   517,  7602,  3860,
      1089,  1141,  4045,  1967,  7633,  2637,  2509,  1860,
@@ -124,10 +124,10 @@ pub const R: [i32; 256] = [
 // Roots of unity. q = 12289  n = 512
 
 #[cfg(any(
+    feature = "i",
     feature = "ii",
     feature = "iii",
-    feature = "iv",
-    feature = "v"
+    feature = "iv"
 ))]
 pub const W: [i32; 512] = [
         1, 10302,  3400,  3150,  8340,  6281,  5277,  9407,
@@ -197,10 +197,10 @@ pub const W: [i32; 512] = [
 ];
 
 #[cfg(any(
+    feature = "i",
     feature = "ii",
     feature = "iii",
-    feature = "iv",
-    feature = "v"
+    feature = "iv"
 ))]
 pub const R: [i32; 512] = [
        24,  1468,  7866,  1866,  3536,  3276,  3758,  4566,
