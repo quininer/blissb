@@ -1,7 +1,7 @@
 use std::cmp::max;
 use rand::Rng;
 use tiny_keccak::Keccak;
-use ::param::{ N, NZ1, NZ2 };
+use ::param::{ N, NZ1, NZ2, KAPPA };
 
 
 #[inline]
@@ -45,5 +45,39 @@ pub fn generate_c(c_idx: &mut [i32], hash: &[u8]) {
     for r in 0..65536 {
         Keccak::new_sha3_256();
         unimplemented!()
+    }
+}
+
+pub fn greedy_sc(f: &[i32], g: &[i32], c_idx: &[i32], x: &mut [i32], y: &mut [i32]) {
+    for k in 0..KAPPA {
+        let i = c_idx[k] as usize;
+        let mut sgn = 0;
+
+        for j in 0..(N - i) {
+            sgn += f[j] * x[i + j] + g[j] * y[i + j];
+        }
+        for j in (N - i)..N {
+            sgn -= f[j] * x[i + j - N] + g[j] * y[i + j - N];
+        }
+
+        if sgn > 0 {
+            for j in 0..(N - i) {
+                x[i + j] -= f[j];
+                y[i + j] -= g[j];
+            }
+            for j in (N - i)..N {
+                x[i + j - N] += f[j];
+                x[i + j - N] += g[j];
+            }
+        } else {
+            for j in 0..(N - i) {
+                x[i + j] += f[j];
+                y[i + j] += g[j];
+            }
+            for j in (N - i)..N {
+                x[i + j - N] -= f[j];
+                x[i + j - N] -= g[j];
+            }
+        }
     }
 }
