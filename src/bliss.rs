@@ -1,9 +1,11 @@
 use std::io;
 use rand::{ Rng, OsRng, ChaChaRng };
-use ::param::{ N, KAPPA, Q, W, R };
+use rand::distributions::{ Normal, Sample };
+use ::param::{ Q, N, D, P, KAPPA, SIGMA, M, W, R };
 use ::ntt::{ fft, flp, xmu, cmu, pwr };
-use ::poly::{
-    uniform_poly,
+use ::utils::{
+    uniform_poly, c_oracle, greedy_sc,
+    vecabsmax, vecscalar
 };
 
 
@@ -83,5 +85,77 @@ impl PrivateKey {
         };
         pubkey.a.clone_from_slice(&self.a);
         pubkey
+    }
+
+    pub fn signature(&self, data: &[u8]) -> io::Result<Signature> {
+        let mut sign = Signature {
+            t: [0; N],
+            z: [0; N],
+            c_idx: [0; KAPPA]
+        };
+        let mut rng = OsRng::new()?.gen::<ChaChaRng>();
+        let mut sample = Normal::new(0.0, SIGMA);
+        let mut u = [0; N];
+        let (mut v, mut vv) = ([0; N], [0; N]);
+        let (mut x, mut y) = ([0; N], [0; N]);
+
+        macro_rules! gauss_sample {
+            () => { sample.sample(&mut rng) as i32 }
+        }
+
+        for _ in 0..(10 * N) {
+            for i in 0..N {
+                sign.t[i] = gauss_sample!();
+                u[i] = gauss_sample!();
+            }
+
+            v.clone_from_slice(&sign.t);
+            xmu(&mut v, &sign.t, &W);
+            fft(&mut v);
+            vv.clone_from_slice(&v);
+            xmu(&mut v, &vv, &self.a);
+            fft(&mut v);
+            vv.clone_from_slice(&v);
+            xmu(&mut v, &vv, &R);
+            flp(&mut v);
+
+            for i in 0..N {
+                let mut tmp = v[i];
+                if tmp & 1 != 0 { tmp += Q };
+                tmp = (tmp + u[i]) % (2 * Q);
+                if tmp < 0 { tmp += 2 * Q };
+                v[i] = tmp;
+                sign.z[i] = ((tmp + (1 << (D - 1))) >> D) % P;
+            }
+
+            c_oracle(&mut sign.c_idx, data, &v);
+            greedy_sc(&self.f, &self.g, &sign.c_idx, &mut x, &mut y);
+
+            let mut d = 1.0 / (SIGMA * SIGMA);
+            d = 1.0 / (
+                M *
+                (-0.5 * d * (vecscalar(&x, &x) + vecscalar(&y, &y)) as f64).exp() *
+                (d * (vecscalar(&sign.t, &x) + vecscalar(&u, &y)) as f64).cosh()
+            );
+
+            if rng.gen::<f64>() > d { continue };
+
+            for i in 0..N {
+                let mut tmp = v[i] - u[i];
+                if tmp < 0 { tmp += 2 * Q };
+                if tmp >= 2 * Q { tmp -= 2 * Q };
+
+                tmp = ((tmp + (1 << (D - 1))) >> D) % P;
+
+                tmp = sign.z[i] - tmp;
+                if tmp < -P / 2 { tmp += P };
+                if tmp > P / 2 { tmp -= P };
+                sign.z[i] = tmp;
+            }
+
+            return Ok(sign);
+        }
+
+        Err(io::Error::new(io::ErrorKind::Other, "Unable to generate the correct signature."))
     }
 }

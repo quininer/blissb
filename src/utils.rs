@@ -2,7 +2,7 @@ use std::cmp::max;
 use rand::Rng;
 use tiny_keccak::Keccak;
 use byteorder::{ BigEndian, ByteOrder };
-use ::param::{ N, NZ1, NZ2, KAPPA, W };
+use ::param::{ N, NZ1, NZ2, KAPPA };
 
 
 #[inline]
@@ -41,20 +41,20 @@ pub fn uniform_poly(v: &mut [i32], rng: &mut Rng) {
     }
 }
 
-pub fn c_oracle(c_idx: &mut [usize], hash: &[u8]) -> bool {
+pub fn c_oracle(c_idx: &mut [usize], hash: &[u8], w: &[i32]) -> bool {
     let mut fl = [0; N];
     let mut idx_i = 0;
-    for r in 0..(10 * N) {
+    for r in 0..::std::u16::MAX {
         let mut sha3 = Keccak::new_sha3_512();
         sha3.update(hash);
 
         let mut output = [0; 64];
         let mut t = [0; 2];
         for i in 0..N {
-            BigEndian::write_u16(&mut t, W[i] as u16);
+            BigEndian::write_u16(&mut t, w[i] as u16);
             sha3.update(&t);
         }
-        BigEndian::write_u16(&mut t, r as u16);
+        BigEndian::write_u16(&mut t, r);
         sha3.update(&t);
         sha3.finalize(&mut output);
 
