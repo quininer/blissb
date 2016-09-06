@@ -59,7 +59,7 @@ pub fn c_oracle(c_idx: &mut [usize], hash: &[u8], w: &[i32]) -> bool {
         sha3.finalize(&mut output);
 
         for i in (0..64).step_by(2) {
-            let idx = BigEndian::read_u16(&output[i..]) as usize;
+            let idx = BigEndian::read_u16(&output[i..]) as usize % N;
             if fl[idx] == 0 {
                 c_idx[idx_i] = idx;
                 idx_i += 1;

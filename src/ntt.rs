@@ -22,6 +22,7 @@ pub fn pwr(mut x: i32, mut e: i32, n: i32) -> i32 {
         if (e & 1) != 0 {
             y = muln(x, y, n);
         }
+        e >>= 1;
     }
 
     y

@@ -9,7 +9,7 @@ tiny-keccak = "1.1"
 byteorder = "0.5"
 
 [features]
-default = [ "iv" ]
+default = [ "i" ]
 o = []
 i = []
 ii = []

@@ -47,7 +47,7 @@ impl PrivateKey {
         xmu(&mut t, &privkey.g, &W);
         fft(&mut t);
 
-        'f : for _ in 0..(10 * N) {
+        'f : for _ in 0..99999 {
             uniform_poly(&mut privkey.f, &mut rng);
             u.clone_from_slice(&privkey.f);
             xmu(&mut u, &privkey.f, &W);
@@ -76,7 +76,7 @@ impl PrivateKey {
                 privkey.a[i] = if x < 0 { x + Q } else { x };
             }
 
-            return Ok(privkey)
+            return Ok(privkey);
         }
 
         Err(io::Error::new(io::ErrorKind::Other, "Unable to generate the correct private key."))
@@ -106,7 +106,7 @@ impl PrivateKey {
             () => { sample.sample(&mut rng) as i32 }
         }
 
-        for _ in 0..(10 * N) {
+        for _ in 0..99999 {
             for i in 0..N {
                 sign.t[i] = gauss_sample!();
                 u[i] = gauss_sample!();
@@ -171,7 +171,7 @@ impl PublicKey {
         if vecabsmax(&sign.t) > B_INF || (vecabsmax(&sign.z) << D) > B_INF {
             return Ok(false);
         }
-        if vecscalar(&sign.t, &sign.t) + vecscalar(&sign.z, &sign.z) << (2 * D)  > B_L2 {
+        if vecscalar(&sign.t, &sign.t) + (vecscalar(&sign.z, &sign.z) << (2 * D)) > B_L2 {
             return Ok(false);
         }
 
@@ -209,7 +209,6 @@ impl PublicKey {
         for i in 0..KAPPA {
             d |= my_idx[i] ^ sign.c_idx[i];
         }
-
         Ok(d == 0)
     }
 }

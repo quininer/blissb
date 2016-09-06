@@ -4,7 +4,9 @@ extern crate rand;
 extern crate tiny_keccak;
 extern crate byteorder;
 
-pub mod utils;
+mod utils;
+mod ntt;
+mod bliss;
 pub mod param;
-pub mod ntt;
-pub mod bliss;
+
+pub use bliss::{ PrivateKey, PublicKey, Signature };
