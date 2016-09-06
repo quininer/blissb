@@ -10,7 +10,7 @@ use ::param::{ Q, N, W};
 }
 
 pub fn pwr(mut x: i32, mut e: i32, n: i32) -> i32 {
-    let mut y = if (e & 1) != 0 {
+    let mut y = if e & 1 != 0 {
         x
     } else {
         1
@@ -19,7 +19,7 @@ pub fn pwr(mut x: i32, mut e: i32, n: i32) -> i32 {
 
     while e > 0 {
         x = sqrn(x, n);
-        if (e & 1) != 0 {
+        if e & 1 != 0 {
             y = muln(x, y, n);
         }
         e >>= 1;
@@ -47,7 +47,7 @@ pub fn fft(v: &mut [i32]) {
         for k in (0..N).step_by(i + i) {
             let x = v[k + i];
             v[k + i] = v[k] - x;
-            v[k] = v[k] + x;
+            v[k] +=  x;
         }
 
         for j in 1..i {

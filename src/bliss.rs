@@ -131,10 +131,20 @@ impl PrivateKey {
                 sign.z[i] = ((tmp + (1 << (D - 1))) >> D) % P;
             }
 
-            if !c_oracle(&mut sign.c_idx, hash, &v) {
-                Err(io::Error::new(io::ErrorKind::Other, "Unable to generate the correct oracle c."))?;
-            }
+            if !c_oracle(&mut sign.c_idx, hash, &sign.z) { continue };
             greedy_sc(&self.f, &self.g, &sign.c_idx, &mut x, &mut y);
+
+            if rng.gen() {
+                for i in 0..N {
+                    sign.t[i] -= x[i];
+                    u[i] -= y[i];
+                }
+            } else {
+                for i in 0..N {
+                    sign.t[i] += x[i];
+                    u[i] += y[i];
+                }
+            }
 
             let mut d = 1.0 / (SIGMA * SIGMA);
             d = 1.0 / (
@@ -177,8 +187,8 @@ impl PublicKey {
 
         let (mut v, mut vv) = ([0; N], [0; N]);
         let mut my_idx = [0; KAPPA];
-        v.clone_from_slice(&sign.t);
 
+        v.clone_from_slice(&sign.t);
         xmu(&mut v, &sign.t, &W);
         fft(&mut v);
         vv.clone_from_slice(&v);
@@ -203,7 +213,10 @@ impl PublicKey {
             v[i] = if tmp < 0 { tmp + P } else { tmp };
         }
 
-        c_oracle(&mut my_idx, hash, &v);
+        if !c_oracle(&mut my_idx, hash, &v) {
+            return Ok(false);
+            // Err(io::Error::new(io::ErrorKind::Other, "Unable to generate the correct oracle c."))?;
+        }
 
         let mut d = 0;
         for i in 0..KAPPA {
