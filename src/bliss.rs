@@ -20,7 +20,7 @@ pub struct PublicKey {
 pub struct Signature {
     t: [i32; N],
     z: [i32; N],
-    c_idx: [i32; KAPPA]
+    c_idx: [usize; KAPPA]
 }
 
 impl PrivateKey {
