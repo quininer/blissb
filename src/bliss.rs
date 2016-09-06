@@ -1,8 +1,11 @@
 use std::io;
 use rand::{ Rng, OsRng, ChaChaRng };
 use rand::distributions::{ Normal, Sample };
-use ::param::{ Q, N, D, P, KAPPA, SIGMA, M, W, R };
 use ::ntt::{ fft, flp, xmu, cmu, pwr };
+use ::param::{
+    Q, N, D, P, KAPPA, B_INF, B_L2, SIGMA, M,
+    W, R
+};
 use ::utils::{
     uniform_poly, c_oracle, greedy_sc,
     vecabsmax, vecscalar
@@ -87,7 +90,7 @@ impl PrivateKey {
         pubkey
     }
 
-    pub fn signature(&self, data: &[u8]) -> io::Result<Signature> {
+    pub fn signature(&self, hash: &[u8]) -> io::Result<Signature> {
         let mut sign = Signature {
             t: [0; N],
             z: [0; N],
@@ -128,7 +131,9 @@ impl PrivateKey {
                 sign.z[i] = ((tmp + (1 << (D - 1))) >> D) % P;
             }
 
-            c_oracle(&mut sign.c_idx, data, &v);
+            if !c_oracle(&mut sign.c_idx, hash, &v) {
+                Err(io::Error::new(io::ErrorKind::Other, "Unable to generate the correct oracle c."))?;
+            }
             greedy_sc(&self.f, &self.g, &sign.c_idx, &mut x, &mut y);
 
             let mut d = 1.0 / (SIGMA * SIGMA);
@@ -157,5 +162,54 @@ impl PrivateKey {
         }
 
         Err(io::Error::new(io::ErrorKind::Other, "Unable to generate the correct signature."))
+    }
+}
+
+
+impl PublicKey {
+    pub fn verify(&self, sign: &Signature, hash: &[u8]) -> io::Result<bool> {
+        if vecabsmax(&sign.t) > B_INF || (vecabsmax(&sign.z) << D) > B_INF {
+            return Ok(false);
+        }
+        if vecscalar(&sign.t, &sign.t) + vecscalar(&sign.z, &sign.z) << (2 * D)  > B_L2 {
+            return Ok(false);
+        }
+
+        let (mut v, mut vv) = ([0; N], [0; N]);
+        let mut my_idx = [0; KAPPA];
+        v.clone_from_slice(&sign.t);
+
+        xmu(&mut v, &sign.t, &W);
+        fft(&mut v);
+        vv.clone_from_slice(&v);
+        xmu(&mut v, &vv, &self.a);
+        fft(&mut v);
+        vv.clone_from_slice(&v);
+        xmu(&mut v, &vv, &R);
+        flp(&mut v);
+
+        for i in 0..N {
+            if v[i] & 1 != 0 {
+                v[i] += Q;
+            }
+        }
+
+        for &i in sign.c_idx.iter() {
+            v[i] = (v[i] + Q) % (2 * Q);
+        }
+
+        for i in 0..N {
+            let tmp = (((v[i] + (1 << (D - 1))) >> D) + sign.z[i]) % P;
+            v[i] = if tmp < 0 { tmp + P } else { tmp };
+        }
+
+        c_oracle(&mut my_idx, hash, &v);
+
+        let mut d = 0;
+        for i in 0..KAPPA {
+            d |= my_idx[i] ^ sign.c_idx[i];
+        }
+
+        Ok(d == 0)
     }
 }
