@@ -13,19 +13,19 @@ use ::utils::{
 
 
 pub struct PrivateKey {
-    f: [i32; N],
-    g: [i32; N],
-    a: [i32; N]
+    pub f: [i32; N],
+    pub g: [i32; N],
+    pub a: [i32; N]
 }
 
 pub struct PublicKey {
-    a: [i32; N]
+    pub a: [i32; N]
 }
 
 pub struct Signature {
-    t: [i32; N],
-    z: [i32; N],
-    c_idx: [usize; KAPPA]
+    pub t: [i32; N],
+    pub z: [i32; N],
+    pub c_idx: [usize; KAPPA]
 }
 
 impl PrivateKey {
@@ -103,6 +103,7 @@ impl PrivateKey {
         let (mut x, mut y) = ([0; N], [0; N]);
 
         macro_rules! gauss_sample {
+            // () => { 0 }
             () => { sample.sample(&mut rng) as i32 }
         }
 
@@ -177,12 +178,12 @@ impl PrivateKey {
 
 
 impl PublicKey {
-    pub fn verify(&self, sign: &Signature, hash: &[u8]) -> io::Result<bool> {
+    pub fn verify(&self, sign: &Signature, hash: &[u8]) -> bool {
         if vecabsmax(&sign.t) > B_INF || (vecabsmax(&sign.z) << D) > B_INF {
-            return Ok(false);
+            return false;
         }
         if vecscalar(&sign.t, &sign.t) + (vecscalar(&sign.z, &sign.z) << (2 * D)) > B_L2 {
-            return Ok(false);
+            return false;
         }
 
         let (mut v, mut vv) = ([0; N], [0; N]);
@@ -214,14 +215,13 @@ impl PublicKey {
         }
 
         if !c_oracle(&mut my_idx, hash, &v) {
-            return Ok(false);
-            // Err(io::Error::new(io::ErrorKind::Other, "Unable to generate the correct oracle c."))?;
+            return false;
         }
 
         let mut d = 0;
         for i in 0..KAPPA {
             d |= my_idx[i] ^ sign.c_idx[i];
         }
-        Ok(d == 0)
+        d == 0
     }
 }

@@ -24,6 +24,6 @@ fn test_sign() {
     let sk = PrivateKey::new().unwrap();
     let pk = sk.public();
     let sign = sk.signature(&hash).unwrap();
-    let result = pk.verify(&sign, &hash).unwrap();
+    let result = pk.verify(&sign, &hash);
     assert!(result);
 }

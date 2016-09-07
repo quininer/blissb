@@ -42,7 +42,7 @@ pub fn uniform_poly(v: &mut [i32], rng: &mut Rng) {
 }
 
 pub fn c_oracle(c_idx: &mut [usize], hash: &[u8], w: &[i32]) -> bool {
-    let mut fl = [0; N];
+    let mut fl = [false; N];
     let mut idx_i = 0;
     for r in 0..::std::u16::MAX {
         let mut sha3 = Keccak::new_sha3_512();
@@ -60,13 +60,11 @@ pub fn c_oracle(c_idx: &mut [usize], hash: &[u8], w: &[i32]) -> bool {
 
         for i in (0..64).step_by(2) {
             let idx = BigEndian::read_u16(&output[i..]) as usize % N;
-            if fl[idx] == 0 {
+            if !fl[idx] {
                 c_idx[idx_i] = idx;
                 idx_i += 1;
-                if idx_i == KAPPA {
-                    return true;
-                }
-                fl[idx] = 1;
+                if idx_i == KAPPA { return true };
+                fl[idx] = true;
             }
         }
     }
@@ -75,7 +73,7 @@ pub fn c_oracle(c_idx: &mut [usize], hash: &[u8], w: &[i32]) -> bool {
 }
 
 pub fn greedy_sc(f: &[i32], g: &[i32], c_idx: &[usize], x: &mut [i32], y: &mut [i32]) {
-    for i in c_idx {
+    for &i in c_idx {
         let mut sgn = 0;
 
         for j in 0..(N - i) {
@@ -92,7 +90,7 @@ pub fn greedy_sc(f: &[i32], g: &[i32], c_idx: &[usize], x: &mut [i32], y: &mut [
             }
             for j in (N - i)..N {
                 x[i + j - N] += f[j];
-                x[i + j - N] += g[j];
+                y[i + j - N] += g[j];
             }
         } else {
             for j in 0..(N - i) {
@@ -101,7 +99,7 @@ pub fn greedy_sc(f: &[i32], g: &[i32], c_idx: &[usize], x: &mut [i32], y: &mut [
             }
             for j in (N - i)..N {
                 x[i + j - N] -= f[j];
-                x[i + j - N] -= g[j];
+                y[i + j - N] -= g[j];
             }
         }
     }
