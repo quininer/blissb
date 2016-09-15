@@ -10,11 +10,7 @@ use ::param::{ Q, N, W};
 }
 
 pub fn pwr(mut x: i32, mut e: i32, n: i32) -> i32 {
-    let mut y = if e & 1 != 0 {
-        x
-    } else {
-        1
-    };
+    let mut y = if e & 1 != 0 { x } else { 1 };
     e >>= 1;
 
     while e > 0 {

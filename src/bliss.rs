@@ -154,7 +154,7 @@ impl PrivateKey {
                 (d * (vecscalar(&sign.t, &x) + vecscalar(&u, &y)) as f64).cosh()
             );
 
-            if rng.gen::<f64>() > d { continue };
+            // if rng.gen::<f64>() > d { continue };
 
             for i in 0..N {
                 let mut tmp = v[i] - u[i];
