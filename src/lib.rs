@@ -21,9 +21,11 @@ fn test_sign() {
     sha3.update(b"Hello blissb.");
     sha3.finalize(&mut hash);
 
-    let sk = PrivateKey::new().unwrap();
-    let pk = sk.public();
-    let sign = sk.signature(&hash).unwrap();
-    let result = pk.verify(&sign, &hash);
-    assert!(result);
+    for _ in 0..1024 {
+        let sk = PrivateKey::new().unwrap();
+        let pk = sk.public();
+        let sign = sk.signature(&hash).unwrap();
+        let result = pk.verify(&sign, &hash);
+        assert!(result);
+    }
 }

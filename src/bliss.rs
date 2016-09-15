@@ -98,16 +98,16 @@ impl PrivateKey {
         };
         let mut rng = OsRng::new()?.gen::<ChaChaRng>();
         let mut sample = Normal::new(0.0, SIGMA);
-        let mut u = [0; N];
-        let (mut v, mut vv) = ([0; N], [0; N]);
-        let (mut x, mut y) = ([0; N], [0; N]);
 
         macro_rules! gauss_sample {
-            // () => { 0 }
             () => { sample.sample(&mut rng) as i32 }
         }
 
         for _ in 0..99999 {
+            let mut u = [0; N];
+            let (mut v, mut vv) = ([0; N], [0; N]);
+            let (mut x, mut y) = ([0; N], [0; N]);
+
             for i in 0..N {
                 sign.t[i] = gauss_sample!();
                 u[i] = gauss_sample!();
@@ -154,7 +154,7 @@ impl PrivateKey {
                 (d * (vecscalar(&sign.t, &x) + vecscalar(&u, &y)) as f64).cosh()
             );
 
-            // if rng.gen::<f64>() > d { continue };
+            if rng.gen::<f32>() as f64 > d { continue };
 
             for i in 0..N {
                 let mut tmp = v[i] - u[i];
