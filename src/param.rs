@@ -15,6 +15,17 @@ macro_rules! bliss_param {
         pub const PMAX: i32 = $pmax;
         pub const SIGMA: f64 = $sigma;
         pub const M: f64 = $m;
+
+        const F_BYTES: usize = 2 * N / 8;
+        const G_BYTES: usize = 3 * N / 8;
+        const A_BYTES: usize = 14 * N / 8;
+        const T_BYTES: usize = 11 * N / 8;
+        const Z_BYTES: usize = 2 * N / 8;
+        const CIDX_BYTES: usize = 9 * KAPPA / 8;
+
+        pub const PRIVATE_KEY_LENGTH: usize = F_BYTES + G_BYTES + A_BYTES;
+        pub const PUBLIC_KEY_LENGTH: usize = A_BYTES;
+        pub const SIGNATURE_LENGTH: usize = T_BYTES + Z_BYTES + CIDX_BYTES;
     }
 }
 
@@ -36,7 +47,7 @@ bliss_param!(
     154,    0,      17825,  107.0,  2.18
 );
 
-#[cfg(feature = "iiiv")]
+#[cfg(feature = "iii")]
 bliss_param!(
     12289,  512,    9,      48,     30,     1760,   10206 * 10206,
     216,    16,     42270,  250.0,  1.40

@@ -7,6 +7,7 @@ authors = ["quininer kel <quininer@live.com>"]
 rand = "0.3"
 tiny-keccak = "1.1"
 byteorder = "0.5"
+bitpack = { git = "https://github.com/quininer/bitpack.git" }
 
 [features]
 default = [ "i" ]

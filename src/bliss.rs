@@ -1,11 +1,9 @@
 use std::io;
 use rand::{ Rng, OsRng, ChaChaRng };
 use rand::distributions::{ Normal, Sample };
+use bitpack::BitPack;
 use ::ntt::{ fft, flp, xmu, cmu, pwr };
-use ::param::{
-    Q, N, D, P, KAPPA, B_INF, B_L2, SIGMA, M,
-    W, R
-};
+use ::param::*;
 use ::utils::{
     uniform_poly, c_oracle, greedy_sc,
     vecabsmax, vecscalar
@@ -47,7 +45,7 @@ impl PrivateKey {
         xmu(&mut t, &privkey.g, &W);
         fft(&mut t);
 
-        'f : for _ in 0..99999 {
+        'f : for _ in 0..1024 {
             uniform_poly(&mut privkey.f, &mut rng);
             u.clone_from_slice(&privkey.f);
             xmu(&mut u, &privkey.f, &W);
@@ -103,7 +101,7 @@ impl PrivateKey {
             () => { sample.sample(&mut rng) as i32 }
         }
 
-        for _ in 0..99999 {
+        for _ in 0..1024 {
             let mut u = [0; N];
             let (mut v, mut vv) = ([0; N], [0; N]);
             let (mut x, mut y) = ([0; N], [0; N]);
@@ -154,7 +152,7 @@ impl PrivateKey {
                 (d * (vecscalar(&sign.t, &x) + vecscalar(&u, &y)) as f64).cosh()
             );
 
-            if rng.gen::<f32>() as f64 > d { continue };
+            if rng.gen::<f64>() > d { continue };
 
             for i in 0..N {
                 let mut tmp = v[i] - u[i];
@@ -173,6 +171,49 @@ impl PrivateKey {
         }
 
         Err(io::Error::new(io::ErrorKind::Other, "Unable to generate the correct signature."))
+    }
+
+    pub fn export(&self) -> Result<[u8; PRIVATE_KEY_LENGTH], ()> {
+        let mut output = [0; PRIVATE_KEY_LENGTH];
+
+        {
+            let mut bitpack = BitPack::<&mut [u8]>::new(&mut output);
+            for &b in &self.f[..] {
+                bitpack.write((b + 1) as u32, 2)?;
+            }
+            for &b in &self.g[..] {
+                bitpack.write((b + 3) as u32, 3)?;
+            }
+            for &b in &self.a[..] {
+                bitpack.write(b as u32, 14)?;
+            }
+            bitpack.flush();
+        }
+
+        Ok(output)
+    }
+
+    pub fn import(input: &[u8; PRIVATE_KEY_LENGTH]) -> Result<PrivateKey, ()> {
+        let mut privkey = PrivateKey {
+            f: [0; N],
+            g: [0; N],
+            a: [0; N]
+        };
+
+        {
+            let mut bitpack = BitPack::<&[u8]>::new(input);
+            for i in 0..N {
+                privkey.f[i] = bitpack.read(2)? as i32 - 1;
+            }
+            for i in 0..N {
+                privkey.g[i] = bitpack.read(3)? as i32 - 3;
+            }
+            for i in 0..N {
+                privkey.a[i] = bitpack.read(14)? as i32;
+            }
+        }
+
+        Ok(privkey)
     }
 }
 
@@ -223,5 +264,44 @@ impl PublicKey {
             d |= my_idx[i] ^ sign.c_idx[i];
         }
         d == 0
+    }
+
+    pub fn export(&self) -> Result<[u8; PUBLIC_KEY_LENGTH], ()> {
+        let mut output = [0; PUBLIC_KEY_LENGTH];
+
+        {
+            let mut bitpack = BitPack::<&mut [u8]>::new(&mut output);
+            for &b in &self.a[..] {
+                bitpack.write(b as u32, 14)?;
+            }
+            bitpack.flush();
+        }
+
+        Ok(output)
+    }
+
+    pub fn import(input: &[u8; PUBLIC_KEY_LENGTH]) -> Result<PublicKey, ()> {
+        let mut pubkey = PublicKey {
+            a: [0; N]
+        };
+
+        {
+            let mut bitpack = BitPack::<&[u8]>::new(input);
+            for i in 0..N {
+                pubkey.a[i] = bitpack.read(14)? as i32;
+            }
+        }
+
+        Ok(pubkey)
+    }
+}
+
+impl Signature {
+    pub fn export(&self) -> Result<[u8; SIGNATURE_LENGTH], ()> {
+        unimplemented!()
+    }
+
+    pub fn import(input: &[u8]) -> Result<Signature, ()> {
+        unimplemented!()
     }
 }
