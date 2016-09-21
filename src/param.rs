@@ -1,7 +1,8 @@
 macro_rules! bliss_param {
     (
         $q:expr, $n:expr, $d:expr, $p:expr, $kappa:expr, $b_inf:expr, $b_l2:expr,
-        $nz1:expr, $nz2:expr, $pmax:expr, $sigma:expr, $m:expr
+        $nz1:expr, $nz2:expr, $pmax:expr, $sigma:expr, $m:expr,
+        $f:expr, $g:expr, $a:expr, $t:expr, $z:expr, $cidx:expr
     ) => {
         pub const Q: i32 = $q;
         pub const N: usize = $n;
@@ -16,47 +17,54 @@ macro_rules! bliss_param {
         pub const SIGMA: f64 = $sigma;
         pub const M: f64 = $m;
 
-        const F_BYTES: usize = 2 * N / 8;
-        const G_BYTES: usize = 3 * N / 8;
-        const A_BYTES: usize = 14 * N / 8;
-        const T_BYTES: usize = 11 * N / 8;
-        const Z_BYTES: usize = 2 * N / 8;
-        const CIDX_BYTES: usize = 9 * KAPPA / 8;
+        pub const F_BITS: usize = $f;
+        pub const G_BITS: usize = $g;
+        pub const A_BITS: usize = $a;
+        pub const T_BITS: usize = $t;
+        pub const Z_BITS: usize = $z;
+        pub const CIDX_BITS: usize = $cidx;
 
-        pub const PRIVATE_KEY_LENGTH: usize = F_BYTES + G_BYTES + A_BYTES;
-        pub const PUBLIC_KEY_LENGTH: usize = A_BYTES;
-        pub const SIGNATURE_LENGTH: usize = T_BYTES + Z_BYTES + CIDX_BYTES;
+        pub const PRIVATEKEY_LENGTH: usize =
+            (F_BITS * N / 8) + (G_BITS * N / 8) + A_BITS * N / 8;
+        pub const PUBLICKEY_LENGTH: usize = A_BITS * N / 8;
+        pub const SIGNATURE_LENGTH: usize =
+            (T_BITS * N / 8) + (Z_BITS * N / 8) + (CIDX_BITS * KAPPA / 8) + (4 - ((CIDX_BITS * KAPPA / 8) % 4));
     }
 }
 
 #[cfg(feature = "o")]
 bliss_param!(
     7681,   256,    5,      480,    12,     542,    2428 * 2428,
-    140,    38,     17928,  100.0,  2.44
+    140,    38,     17928,  100.0,  2.44,
+    2,      3,      14,     12,     5,      9
 );
 
 #[cfg(feature = "i")]
 bliss_param!(
     12289,  512,    10,     24,     23,     2100,   12872 * 12872,
-    154,    0,      17825,  215.0,  1.21
+    154,    0,      17825,  215.0,  1.21,
+    2,      3,      14,     12,     3,      9
 );
 
 #[cfg(feature = "ii")]
 bliss_param!(
     12289,  512,    10,     24,     23,     1563,   11073 * 11073,
-    154,    0,      17825,  107.0,  2.18
+    154,    0,      17825,  107.0,  2.18,
+    2,      3,      14,     12,     3,      9
 );
 
 #[cfg(feature = "iii")]
 bliss_param!(
     12289,  512,    9,      48,     30,     1760,   10206 * 10206,
-    216,    16,     42270,  250.0,  1.40
+    216,    16,     42270,  250.0,  1.40,
+    2,      3,      14,     12,     3,      9
 );
 
 #[cfg(feature = "iv")]
 bliss_param!(
     12289,  512,    8,      96,     39,     1613,   9901 * 9901,
-    231,    31,     69576,  271.0,  1.61
+    231,    31,     69576,  271.0,  1.61,
+    3,      4,      14,     12,     4,      9
 );
 
 

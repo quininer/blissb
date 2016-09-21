@@ -173,19 +173,15 @@ impl PrivateKey {
         Err(io::Error::new(io::ErrorKind::Other, "Unable to generate the correct signature."))
     }
 
-    pub fn export(&self) -> Result<[u8; PRIVATE_KEY_LENGTH], ()> {
-        let mut output = [0; PRIVATE_KEY_LENGTH];
+    pub fn export(&self) -> Result<[u8; PRIVATEKEY_LENGTH], ()> {
+        let mut output = [0; PRIVATEKEY_LENGTH];
 
         {
             let mut bitpack = BitPack::<&mut [u8]>::new(&mut output);
-            for &b in &self.f[..] {
-                bitpack.write((b + 1) as u32, 2)?;
-            }
-            for &b in &self.g[..] {
-                bitpack.write((b + 3) as u32, 3)?;
-            }
-            for &b in &self.a[..] {
-                bitpack.write(b as u32, 14)?;
+            for i in 0..N {
+                bitpack.write((self.f[i] + 2i32.pow(F_BITS as u32 - 1)) as u32, F_BITS)?;
+                bitpack.write((self.g[i] + 2i32.pow(G_BITS as u32 - 1)) as u32, G_BITS)?;
+                bitpack.write(self.a[i] as u32, A_BITS)?;
             }
             bitpack.flush();
         }
@@ -193,7 +189,7 @@ impl PrivateKey {
         Ok(output)
     }
 
-    pub fn import(input: &[u8; PRIVATE_KEY_LENGTH]) -> Result<PrivateKey, ()> {
+    pub fn import(input: &[u8; PRIVATEKEY_LENGTH]) -> Result<PrivateKey, ()> {
         let mut privkey = PrivateKey {
             f: [0; N],
             g: [0; N],
@@ -203,13 +199,9 @@ impl PrivateKey {
         {
             let mut bitpack = BitPack::<&[u8]>::new(input);
             for i in 0..N {
-                privkey.f[i] = bitpack.read(2)? as i32 - 1;
-            }
-            for i in 0..N {
-                privkey.g[i] = bitpack.read(3)? as i32 - 3;
-            }
-            for i in 0..N {
-                privkey.a[i] = bitpack.read(14)? as i32;
+                privkey.f[i] = bitpack.read(F_BITS)? as i32 - 2i32.pow(F_BITS as u32 - 1);
+                privkey.g[i] = bitpack.read(G_BITS)? as i32 - 2i32.pow(G_BITS as u32 - 1);
+                privkey.a[i] = bitpack.read(A_BITS)? as i32;
             }
         }
 
@@ -266,13 +258,13 @@ impl PublicKey {
         d == 0
     }
 
-    pub fn export(&self) -> Result<[u8; PUBLIC_KEY_LENGTH], ()> {
-        let mut output = [0; PUBLIC_KEY_LENGTH];
+    pub fn export(&self) -> Result<[u8; PUBLICKEY_LENGTH], ()> {
+        let mut output = [0; PUBLICKEY_LENGTH];
 
         {
             let mut bitpack = BitPack::<&mut [u8]>::new(&mut output);
             for &b in &self.a[..] {
-                bitpack.write(b as u32, 14)?;
+                bitpack.write(b as u32, A_BITS)?;
             }
             bitpack.flush();
         }
@@ -280,7 +272,7 @@ impl PublicKey {
         Ok(output)
     }
 
-    pub fn import(input: &[u8; PUBLIC_KEY_LENGTH]) -> Result<PublicKey, ()> {
+    pub fn import(input: &[u8; PUBLICKEY_LENGTH]) -> Result<PublicKey, ()> {
         let mut pubkey = PublicKey {
             a: [0; N]
         };
@@ -288,7 +280,7 @@ impl PublicKey {
         {
             let mut bitpack = BitPack::<&[u8]>::new(input);
             for i in 0..N {
-                pubkey.a[i] = bitpack.read(14)? as i32;
+                pubkey.a[i] = bitpack.read(A_BITS)? as i32;
             }
         }
 
@@ -298,10 +290,41 @@ impl PublicKey {
 
 impl Signature {
     pub fn export(&self) -> Result<[u8; SIGNATURE_LENGTH], ()> {
-        unimplemented!()
+        let mut output = [0; SIGNATURE_LENGTH];
+
+        {
+            let mut bitpack = BitPack::<&mut [u8]>::new(&mut output);
+            for i in 0..N {
+                bitpack.write((self.t[i] + 2i32.pow(T_BITS as u32 - 1)) as u32, T_BITS)?;
+                bitpack.write((self.z[i] + 2i32.pow(Z_BITS as u32 - 1)) as u32, Z_BITS)?;
+            }
+            for i in 0..KAPPA {
+                bitpack.write(self.c_idx[i] as u32, CIDX_BITS)?;
+            }
+            bitpack.flush();
+        }
+
+        Ok(output)
     }
 
     pub fn import(input: &[u8]) -> Result<Signature, ()> {
-        unimplemented!()
+        let mut sign = Signature {
+            t: [0; N],
+            z: [0; N],
+            c_idx: [0; KAPPA]
+        };
+
+        {
+            let mut bitpack = BitPack::<&[u8]>::new(input);
+            for i in 0..N {
+                sign.t[i] = bitpack.read(T_BITS)? as i32 - 2i32.pow(T_BITS as u32 - 1);
+                sign.z[i] = bitpack.read(Z_BITS)? as i32 - 2i32.pow(Z_BITS as u32 - 1);
+            }
+            for i in 0..KAPPA {
+                sign.c_idx[i] = bitpack.read(CIDX_BITS)? as usize;
+            }
+        }
+
+        Ok(sign)
     }
 }

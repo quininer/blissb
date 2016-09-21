@@ -39,14 +39,22 @@ fn test_export_import() {
     sha3.update(b"Hello blissb.");
     sha3.finalize(&mut hash);
 
-    let sk = PrivateKey::new().unwrap();
-    let pk = sk.public();
-    let sign = sk.signature(&hash).unwrap();
-    let sk_bytes = sk.export().unwrap();
-    let pk_bytes = pk.export().unwrap();
+    for _ in 0..1024 {
+        let sk = PrivateKey::new().unwrap();
+        let pk = sk.public();
+        let sign = sk.signature(&hash).unwrap();
+        let sk_bytes = sk.export().unwrap();
+        let pk_bytes = pk.export().unwrap();
 
-    let sk = PrivateKey::import(&sk_bytes).unwrap();
-    let pk = PublicKey::import(&pk_bytes).unwrap();
+        let sk = PrivateKey::import(&sk_bytes).unwrap();
+        let pk = PublicKey::import(&pk_bytes).unwrap();
 
-    assert!(pk.verify(&sign, &hash));
+        assert!(pk.verify(&sign, &hash));
+
+        let sign = sk.signature(&hash).unwrap();
+        let sign_bytes = sign.export().unwrap();
+        let sign2 = Signature::import(&sign_bytes).unwrap();
+
+        assert!(pk.verify(&sign2, &hash));
+    }
 }
