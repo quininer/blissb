@@ -1,5 +1,5 @@
 use std::io;
-use rand::{ Rng, OsRng, ChaChaRng };
+use rand::{ Rand, Rng, OsRng };
 use rand::distributions::{ Normal, Sample };
 use bitpack::BitPack;
 use ::ntt::{ fft, flp, xmu, cmu, pwr };
@@ -27,8 +27,8 @@ pub struct Signature {
 }
 
 impl PrivateKey {
-    pub fn new() -> io::Result<PrivateKey> {
-        let mut rng = OsRng::new()?.gen::<ChaChaRng>();
+    pub fn new<R: Rand + Rng>() -> io::Result<PrivateKey> {
+        let mut rng = OsRng::new()?.gen::<R>();
         let (mut t, mut u, mut a) = ([0; N], [0; N], [0; N]);
         let mut privkey = PrivateKey {
             f: [0; N],
@@ -88,13 +88,13 @@ impl PrivateKey {
         pubkey
     }
 
-    pub fn signature(&self, hash: &[u8]) -> io::Result<Signature> {
+    pub fn signature<R: Rand + Rng>(&self, hash: &[u8]) -> io::Result<Signature> {
         let mut sign = Signature {
             t: [0; N],
             z: [0; N],
             c_idx: [0; KAPPA]
         };
-        let mut rng = OsRng::new()?.gen::<ChaChaRng>();
+        let mut rng = OsRng::new()?.gen::<R>();
         let mut sample = Normal::new(0.0, SIGMA);
 
         macro_rules! gauss_sample {

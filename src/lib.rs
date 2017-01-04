@@ -1,4 +1,4 @@
-#![feature(step_by, question_mark)]
+#![feature(step_by)]
 
 extern crate rand;
 extern crate tiny_keccak;
@@ -15,6 +15,7 @@ pub use bliss::{ PrivateKey, PublicKey, Signature };
 
 #[test]
 fn test_sign() {
+    use rand::ChaChaRng;
     use tiny_keccak::Keccak;
 
     let mut hash = [0; 64];
@@ -23,15 +24,16 @@ fn test_sign() {
     sha3.finalize(&mut hash);
 
     for _ in 0..1024 {
-        let sk = PrivateKey::new().unwrap();
+        let sk = PrivateKey::new::<ChaChaRng>().unwrap();
         let pk = sk.public();
-        let sign = sk.signature(&hash).unwrap();
+        let sign = sk.signature::<ChaChaRng>(&hash).unwrap();
         assert!(pk.verify(&sign, &hash));
     }
 }
 
 #[test]
 fn test_export_import() {
+    use rand::ChaChaRng;
     use tiny_keccak::Keccak;
 
     let mut hash = [0; 64];
@@ -40,9 +42,9 @@ fn test_export_import() {
     sha3.finalize(&mut hash);
 
     for _ in 0..1024 {
-        let sk = PrivateKey::new().unwrap();
+        let sk = PrivateKey::new::<ChaChaRng>().unwrap();
         let pk = sk.public();
-        let sign = sk.signature(&hash).unwrap();
+        let sign = sk.signature::<ChaChaRng>(&hash).unwrap();
         let sk_bytes = sk.export().unwrap();
         let pk_bytes = pk.export().unwrap();
 
@@ -51,7 +53,7 @@ fn test_export_import() {
 
         assert!(pk.verify(&sign, &hash));
 
-        let sign = sk.signature(&hash).unwrap();
+        let sign = sk.signature::<ChaChaRng>(&hash).unwrap();
         let sign_bytes = sign.export().unwrap();
         let sign2 = Signature::import(&sign_bytes).unwrap();
 
