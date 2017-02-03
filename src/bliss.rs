@@ -41,13 +41,13 @@ impl PrivateKey {
             privkey.g[i] *= 2;
         }
         privkey.g[0] -= 1;
-        t.clone_from_slice(&privkey.g);
+        t.copy_from_slice(&privkey.g);
         xmu(&mut t, &privkey.g, &W);
         fft(&mut t);
 
         'f : for _ in 0..1024 {
             uniform_poly(&mut privkey.f, &mut rng);
-            u.clone_from_slice(&privkey.f);
+            u.copy_from_slice(&privkey.f);
             xmu(&mut u, &privkey.f, &W);
             fft(&mut u);
 
@@ -59,13 +59,13 @@ impl PrivateKey {
 
             xmu(&mut privkey.a, &t, &u);
             fft(&mut privkey.a);
-            a.clone_from_slice(&privkey.a);
+            a.copy_from_slice(&privkey.a);
             xmu(&mut privkey.a, &a, &R);
 
-            a.clone_from_slice(&privkey.a);
+            a.copy_from_slice(&privkey.a);
             cmu(&mut privkey.a, &a, -1);
             flp(&mut privkey.a);
-            a.clone_from_slice(&privkey.a);
+            a.copy_from_slice(&privkey.a);
             xmu(&mut privkey.a, &a, &W);
             fft(&mut privkey.a);
 
@@ -84,11 +84,14 @@ impl PrivateKey {
         let mut pubkey = PublicKey {
             a: [0; N]
         };
-        pubkey.a.clone_from_slice(&self.a);
+        pubkey.a.copy_from_slice(&self.a);
         pubkey
     }
 
     pub fn signature<R: Rand + Rng>(&self, hash: &[u8]) -> io::Result<Signature> {
+        let mut u = [0; N];
+        let (mut v, mut vv) = ([0; N], [0; N]);
+        let (mut x, mut y) = ([0; N], [0; N]);
         let mut sign = Signature {
             t: [0; N],
             z: [0; N],
@@ -102,22 +105,18 @@ impl PrivateKey {
         }
 
         for _ in 0..1024 {
-            let mut u = [0; N];
-            let (mut v, mut vv) = ([0; N], [0; N]);
-            let (mut x, mut y) = ([0; N], [0; N]);
-
             for i in 0..N {
                 sign.t[i] = gauss_sample!();
                 u[i] = gauss_sample!();
             }
 
-            v.clone_from_slice(&sign.t);
+            v.copy_from_slice(&sign.t);
             xmu(&mut v, &sign.t, &W);
             fft(&mut v);
-            vv.clone_from_slice(&v);
+            vv.copy_from_slice(&v);
             xmu(&mut v, &vv, &self.a);
             fft(&mut v);
-            vv.clone_from_slice(&v);
+            vv.copy_from_slice(&v);
             xmu(&mut v, &vv, &R);
             flp(&mut v);
 
@@ -222,13 +221,13 @@ impl PublicKey {
         let (mut v, mut vv) = ([0; N], [0; N]);
         let mut my_idx = [0; KAPPA];
 
-        v.clone_from_slice(&sign.t);
+        v.copy_from_slice(&sign.t);
         xmu(&mut v, &sign.t, &W);
         fft(&mut v);
-        vv.clone_from_slice(&v);
+        vv.copy_from_slice(&v);
         xmu(&mut v, &vv, &self.a);
         fft(&mut v);
-        vv.clone_from_slice(&v);
+        vv.copy_from_slice(&v);
         xmu(&mut v, &vv, &R);
         flp(&mut v);
 

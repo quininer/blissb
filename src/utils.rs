@@ -20,6 +20,8 @@ pub fn vecscalar(t: &[i32], u: &[i32]) -> i32 {
 }
 
 pub fn uniform_poly(v: &mut [i32], rng: &mut Rng) {
+    v.copy_from_slice(&[0; N]);
+
     let mut i = 0;
     while i < NZ1 {
         let x = rng.next_u64();
@@ -73,6 +75,9 @@ pub fn c_oracle(c_idx: &mut [usize], hash: &[u8], w: &[i32]) -> bool {
 }
 
 pub fn greedy_sc(f: &[i32], g: &[i32], c_idx: &[usize], x: &mut [i32], y: &mut [i32]) {
+    x.copy_from_slice(&[0; N]);
+    y.copy_from_slice(&[0; N]);
+
     for &i in c_idx {
         let mut sgn = 0;
 
