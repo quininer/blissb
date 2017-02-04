@@ -28,6 +28,7 @@ fn test_sign() {
         let pk = sk.public();
         let sign = sk.signature::<ChaChaRng>(&hash).unwrap();
         assert!(pk.verify(&sign, &hash));
+        assert!(!pk.verify(&sign, &[0; 64]));
     }
 }
 

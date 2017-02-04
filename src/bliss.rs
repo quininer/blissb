@@ -41,13 +41,11 @@ impl PrivateKey {
             privkey.g[i] *= 2;
         }
         privkey.g[0] -= 1;
-        t.copy_from_slice(&privkey.g);
         xmu(&mut t, &privkey.g, &W);
         fft(&mut t);
 
         'f : for _ in 0..1024 {
             uniform_poly(&mut privkey.f, &mut rng);
-            u.copy_from_slice(&privkey.f);
             xmu(&mut u, &privkey.f, &W);
             fft(&mut u);
 
@@ -57,15 +55,12 @@ impl PrivateKey {
                 u[i] = pwr(x, Q - 2, Q);
             }
 
-            xmu(&mut privkey.a, &t, &u);
-            fft(&mut privkey.a);
-            a.copy_from_slice(&privkey.a);
+            xmu(&mut a, &t, &u);
+            fft(&mut a);
             xmu(&mut privkey.a, &a, &R);
 
-            a.copy_from_slice(&privkey.a);
-            cmu(&mut privkey.a, &a, -1);
-            flp(&mut privkey.a);
-            a.copy_from_slice(&privkey.a);
+            cmu(&mut a, &privkey.a, -1);
+            flp(&mut a);
             xmu(&mut privkey.a, &a, &W);
             fft(&mut privkey.a);
 
@@ -110,13 +105,10 @@ impl PrivateKey {
                 u[i] = gauss_sample!();
             }
 
-            v.copy_from_slice(&sign.t);
             xmu(&mut v, &sign.t, &W);
             fft(&mut v);
-            vv.copy_from_slice(&v);
-            xmu(&mut v, &vv, &self.a);
-            fft(&mut v);
-            vv.copy_from_slice(&v);
+            xmu(&mut vv, &v, &self.a);
+            fft(&mut vv);
             xmu(&mut v, &vv, &R);
             flp(&mut v);
 
@@ -221,13 +213,10 @@ impl PublicKey {
         let (mut v, mut vv) = ([0; N], [0; N]);
         let mut my_idx = [0; KAPPA];
 
-        v.copy_from_slice(&sign.t);
         xmu(&mut v, &sign.t, &W);
         fft(&mut v);
-        vv.copy_from_slice(&v);
-        xmu(&mut v, &vv, &self.a);
-        fft(&mut v);
-        vv.copy_from_slice(&v);
+        xmu(&mut vv, &v, &self.a);
+        fft(&mut vv);
         xmu(&mut v, &vv, &R);
         flp(&mut v);
 
