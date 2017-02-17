@@ -25,19 +25,12 @@ macro_rules! bliss_param {
         pub const CIDX_BITS: usize = $cidx;
 
         pub const PRIVATEKEY_LENGTH: usize =
-            (F_BITS * N / 8) + (G_BITS * N / 8) + A_BITS * N / 8;
+            (F_BITS * N / 8) + (G_BITS * N / 8) + (A_BITS * N / 8);
         pub const PUBLICKEY_LENGTH: usize = A_BITS * N / 8;
         pub const SIGNATURE_LENGTH: usize =
-            (T_BITS * N / 8) + (Z_BITS * N / 8) + (CIDX_BITS * KAPPA / 8) + (4 - ((CIDX_BITS * KAPPA / 8) % 4));
+            (T_BITS * N / 8) + (Z_BITS * N / 8) + ((CIDX_BITS * KAPPA + 8 - 1) / 8);
     }
 }
-
-#[cfg(feature = "o")]
-bliss_param!(
-    7681,   256,    5,      480,    12,     542,    2428 * 2428,
-    140,    38,     17928,  100.0,  2.44,
-    2,      3,      14,     12,     5,      9
-);
 
 #[cfg(feature = "i")]
 bliss_param!(
@@ -57,7 +50,7 @@ bliss_param!(
 bliss_param!(
     12289,  512,    9,      48,     30,     1760,   10206 * 10206,
     216,    16,     42270,  250.0,  1.40,
-    2,      3,      14,     12,     3,      9
+    3,      4,      14,     12,     3,      9
 );
 
 #[cfg(feature = "iv")]

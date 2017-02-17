@@ -49,12 +49,12 @@ fn test_export_import() {
         let sk_bytes = sk.export().unwrap();
         let pk_bytes = pk.export().unwrap();
 
-        let sk = PrivateKey::import(&sk_bytes).unwrap();
-        let pk = PublicKey::import(&pk_bytes).unwrap();
+        let sk2 = PrivateKey::import(&sk_bytes).unwrap();
+        let pk2 = PublicKey::import(&pk_bytes).unwrap();
 
-        assert!(pk.verify(&sign, &hash));
+        assert!(pk2.verify(&sign, &hash));
 
-        let sign = sk.signature::<ChaChaRng>(&hash).unwrap();
+        let sign = sk2.signature::<ChaChaRng>(&hash).unwrap();
         let sign_bytes = sign.export().unwrap();
         let sign2 = Signature::import(&sign_bytes).unwrap();
 
