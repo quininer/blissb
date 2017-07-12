@@ -1,4 +1,4 @@
-use ::param::{ Q, N, W};
+use ::param::{ Q, N, W };
 
 
 #[inline] fn muln(x: i32, y: i32, n: i32) -> i32 {
